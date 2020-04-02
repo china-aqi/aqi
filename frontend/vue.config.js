@@ -12,6 +12,22 @@ module.exports = {
       }
     }
   },
+
+  // Markdown
+  // Refer to: https://segmentfault.com/a/1190000019412548?tdsourcetag=s_pctim_aiomsg
+  chainWebpack: config => {
+    config.module.rule('md')
+        .test(/\.md/)
+        .use('vue-loader')
+        .loader('vue-loader')
+        .end()
+        .use('vue-markdown-loader')
+        .loader('vue-markdown-loader/lib/markdown-compiler')
+        .options({
+          raw: true
+        })
+  },
+
   // Change build paths to make them Maven compatible
   // see https://cli.vuejs.org/config/
   outputDir: 'target/dist',

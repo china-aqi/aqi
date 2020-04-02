@@ -49,26 +49,6 @@ export default {
         );
       };
     },
-    handle_securities_4_combobox(response) {
-      // this.securities = [{"value": response.data["hello world"][0][1] + "(" + response.data["hello world"][0][0] + ")"}];
-      //   this.securities = response["data"]["_embedded"]["Security"][0]["match"];
-      // for (let i in response.data["hello world"]) {
-      //   this.securities.unshift({
-      //     value:
-      //       response.data["hello world"][i][1] +
-      //       "(" +
-      //       response.data["hello world"][i][0] +
-      //       "," +
-      //       response.data["hello world"][i][2] +
-      //       ")"
-      //   });
-      // }
-        this.securities=[]
-        for (let i in response["data"]["_embedded"]["Security"]) {
-            this.securities.unshift(response["data"]["_embedded"]["Security"][i]["match"])
-        }
-        return this.securities
-    },
     handleSelect(item) {
       console.log(item);
       this.$router.push({
