@@ -8,8 +8,8 @@
         <el-row :gutter="20">
           <el-col :span="11">
             <div class="grid-content bg-purple">
-              <div class="grid-content bg-purple-light">
-                <RIMValueResult :result="getRimValue()"></RIMValueResult>
+              <div class="grid-content bg-purple-light" v-if="lastIndicator != null">
+                <RIMValueResult :result="calcRimValue(lastIndicator, forecast, RValue, T1Value, G1Value, G2Value)"></RIMValueResult>
               </div>
               <el-row :gutter="10">
                 <el-col :span="12">
@@ -36,7 +36,7 @@
             </div>
           </el-col>
           <el-col :span="8">
-            <div class="grid-content bg-purple" v-if="rData != null">
+            <div class="grid-content bg-purple">
               <RIMValueSlider
                 :config-info="{ name: '成长期', min: 0, max: 5, step: 1, defaultValue: 5}"
                 :caption-fn="v => '盈利成长期持续: ' + v + '年'"
@@ -75,6 +75,9 @@ import RIMValueTable from "../components/RIMValueTable";
 import RIMValueSlider from "../components/RIMValueSlider";
 import RIMValueIntroduction from "../components/RIMValueIntroduction";
 import Spread from "../components/Spread";
+
+const assert = require('assert');
+
 export default {
   name: "Detail",
   components: {
@@ -90,14 +93,12 @@ export default {
       lastIndicator: null,
       forecast: null,
       company: null,
-      companyInfo: null,
       code: this.$route.query.code,
       name: this.$route.query.name,
       RValue: 0.1,
-      G1Value: 0.1,
+      G1Value: 0.2,
       G2Value: 0.02,
-      T1Value: 7,
-      T2Value: 5
+      T1Value: 5
     };
   },
   methods: {
@@ -114,96 +115,47 @@ export default {
     getValueG2FormSon(data) {
       this.G2Value = data;
     },
-    getRimValue() {
-      if (this.rData != null) {
-        let rimParameter2018 = {
-          bps2018: this.rData["last_bps"][1],
-          predicationEPS: this.rData["analysis_eps"],
-          t1: this.T1Value,
-          g1: this.G1Value,
-          industry_roe: this.rData["industry_roe"],
-          r: this.RValue,
-          g2: this.G2Value
-        };
-        let result = [{ year: 2018, bps: this.rData["last_bps"][1] }];
-        return this.calcRI2018(rimParameter2018, 2019, result)
-          .slice(1)
-          .reduce((x, y) => x + y.discounted_ri, this.rData["last_bps"][1])
-          .toFixed(2);
-      }
-    },
-    calcRI2018(p, year, result) {
-      let eps = null;
-      let last_result = result.slice(-1)[0];
+    calcRimValue(indicator, forecast, capitalReturn, growthPeriod, growthRate, sustainedGrowRate) {
+      assert(typeof(indicator[0]['value']) == "string")
+      assert(typeof(forecast[0]['value']) == "number")
+      assert(typeof(capitalReturn) == "number")
+      assert(typeof(sustainedGrowRate) == "number")
 
-      // 计算eps
-      if (2019 <= year && year <= 2021) {
-        // 分析师预测期
-        eps = p.predicationEPS[year - 2019][1];
-      } else if (year <= 2018 + p.t1) {
-        // 盈利线性成长期
-        eps = last_result.eps * (1 + p.g1);
-      } else if (year <= 2030) {
-        // ROE均值回归期
-        let last_roe = last_result.eps / result.slice(-2)[0].bps;
-        let delta_roe = (last_roe - p.industry_roe) / (2030 + 1 - year);
-        let roe = last_roe - delta_roe;
-        eps = roe * last_result.bps;
+      let lastBPS = parseFloat(indicator[0]['value']);
+      let value = lastBPS;
+
+      // 分析师预测数据推算
+      let eps = 0;
+      let year = 0;
+      for (let i = 0; i <= 2; i++) {
+        eps = forecast[i]['value'];
+        let ri = eps - lastBPS * capitalReturn;
+        year++;
+        let discounted_ri = ri / Math.pow(1 + capitalReturn, year);
+        value += discounted_ri;
+        lastBPS = eps + lastBPS;
+        value += eps;
       }
 
-      if (year <= 2030) {
-        // 盈利成长期 + ROE均值回归期
-        // 计算bps, 和剩余收益ri
-        let bps = last_result.bps + eps;
-        let ri = eps - last_result.bps * p.r;
-        result.push({
-          year: year,
-          eps: eps,
-          bps: bps,
-          ri: ri,
-          discounted_ri: ri / Math.pow(1 + p.r, year - 2019)
-        });
-        return this.calcRI2018(p, year + 1, result);
-      } else {
-        // 持续期，计算完毕后退出递归运算
-        let cv = (last_result.ri * (1 + p.g2)) / (p.r - p.g2);
-        result.push({
-          year: 2031,
-          eps: 0,
-          bps: 0,
-          ri: cv,
-          discounted_ri: cv / Math.pow(1 + p.r, year - 2019 - 1)
-        });
-        return result;
+      // 盈利成长期推算
+      for (let j = 0; j < growthPeriod; j++) {
+        eps = eps * (1 + growthRate);
+        let ri = eps - lastBPS * capitalReturn;
+        year++;
+        let discounted_ri = ri / Math.pow(1 + capitalReturn, year)
+        value += discounted_ri;
+        lastBPS = eps + lastBPS;
       }
-    },
-    getCompanyInfo() {
-      if (this.companyInfo != null) {
-        return {
-          market_value: this.companyInfo["market_value"],
-          industry: this.companyInfo["industry"],
-          main_business: this.companyInfo["main_business"],
-          registered_place: this.companyInfo["registered_place"],
-          history: this.companyInfo["history"][0]
-        };
-      }
+
+      // 经营持续期的推算
+      let ri = eps * (1 + sustainedGrowRate) / (capitalReturn - sustainedGrowRate);
+      let discounted_ri = ri / Math.pow(1 + capitalReturn, year)
+      value += discounted_ri;
+
+      return value;
     }
   },
   mounted() {
-    axios
-      .get("http://106.15.137.244:80/v1.0/rim-proposal", {
-        params: {
-          code: this.$route.query.code
-        }
-      })
-      .then(response => (this.rData = response.data));
-    axios
-      .get("http://106.15.137.244:80/v1.0/a_public_company_info", {
-        params: {
-          code: this.$route.query.code
-        }
-      })
-      .then(response => (this.companyInfo = response.data));
     // 获取当期财务指标
     axios.get("http://192.168.0.7:1303/indicator/search/getByCode", {params: { code: this.$route.query.code }})
             .then(res => (this.lastIndicator = [{des: "2018BPS", value: res.data["_embedded"]["indicator"][0]["bps"].toFixed(2)},
