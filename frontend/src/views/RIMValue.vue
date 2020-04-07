@@ -9,7 +9,7 @@
           <el-col :span="11">
             <div class="grid-content bg-purple">
               <div class="grid-content bg-purple-light" v-if="lastIndicator != null">
-                <RIMValueResult :result="calcRimValue(lastIndicator, forecast, RValue, T1Value, G1Value, G2Value)"></RIMValueResult>
+                <RIMValueResult :result="calcRimValue(lastIndicator, forecast, RValue, T1Value, G1Value, G2Value)['value']"></RIMValueResult>
               </div>
               <el-row :gutter="10">
                 <el-col :span="12">
@@ -63,7 +63,15 @@
           </el-col>
         </el-row>
       </div>
-      <Spread></Spread>
+      <el-tabs v-model="activeName" @tab-click="handleClick">
+        <el-tab-pane label="估值模型说明" name="second"><spread></spread></el-tab-pane>
+        <el-tab-pane label="估值计算可视化" name="first">
+          <RIMVisualization :columns="getRimVisualizationTblCols(T1Value)"
+                            :tblData="toVisData(calcRimValue(lastIndicator, forecast, RValue, T1Value, G1Value, G2Value)['procedure'])"></RIMVisualization>
+        </el-tab-pane>
+        <el-tab-pane label="公司质量分析" name="fourth">公司质量分析 To Do</el-tab-pane>
+        <el-tab-pane label="估值参数建议" name="third">估值参数建议 To Do</el-tab-pane>
+      </el-tabs>
     </el-card>
   </div>
 </template>
@@ -75,6 +83,7 @@ import RIMValueTable from "../components/RIMValueTable";
 import RIMValueSlider from "../components/RIMValueSlider";
 import RIMValueIntroduction from "../components/RIMValueIntroduction";
 import Spread from "../components/Spread";
+import RIMVisualization from "../components/RIMVisualization";
 
 const assert = require('assert');
 
@@ -82,6 +91,7 @@ export default {
   name: "Detail",
   components: {
     Spread,
+    RIMVisualization,
     RIMValueIntroduction,
     RIMValueTable,
     RIMValueResult,
@@ -98,10 +108,14 @@ export default {
       RValue: 0.1,
       G1Value: 0.2,
       G2Value: 0.02,
-      T1Value: 5
+      T1Value: 5,
+      activeName: 'second'
     };
   },
   methods: {
+    handleClick(tab, event) {
+      console.log(tab, event);
+    },
     getValueT1T2FormSon(data) {
       this.T1Value = data;
       this.T2Value = this.rData["t1_t2"] - this.T1Value;
@@ -115,44 +129,105 @@ export default {
     getValueG2FormSon(data) {
       this.G2Value = data;
     },
+    getRimVisualizationTblCols(growingPeriod) {
+      let cols = [{prob: 'item', label: '项目', width:180}, {prob: 'y1', label: '2018年', width:70},
+        {prob: 'y2', label: '2019年', width:70}, {prob: 'y3', label: '2020年', width:70},
+        {prob: 'y4', label: '2021年', width:70}];
+      for (let i = 0; i < growingPeriod; i++) {
+        cols.push({prob: 'y' + (i+5).toString(), label: (2022 + i).toString() + '年', width:70})
+      }
+      return cols;
+    },
+    toVisData(rimValue) {
+      let toFixedOrNull = numb => numb != null ? numb.toFixed(3) : null;
+      let results = [];
+      let resultEPS = {item: '每股盈利EPS'};
+      let resultBPS = {item: '每股净资产BPS'};
+      let resultRI = {item: '每股剩余收益RI'};
+      let resultDiscountedRI = {item: '每股RI折现值'};
+      for (let i=0; i<rimValue.length - 1; i++) {
+        resultEPS[`y${i+1}`] = toFixedOrNull(rimValue[i].eps);
+        resultBPS[`y${i+1}`] = toFixedOrNull(rimValue[i].bps);
+        resultRI[`y${i+1}`] = toFixedOrNull(rimValue[i].ri);
+        resultDiscountedRI[`y${i+1}`] = toFixedOrNull(rimValue[i].disRi);
+      }
+      results.push(resultEPS);
+      results.push(resultBPS);
+      results.push(resultRI);
+      results.push(resultDiscountedRI);
+
+      let sum = 0;
+      for (let key in resultDiscountedRI) {
+          if (key != 'item' && resultDiscountedRI[key] != null) {
+              sum += parseFloat(resultDiscountedRI[key]);
+          }
+      }
+      results.push({item: '每股RI折现值之和', y1: sum.toFixed(3)});
+
+      let cvRi = rimValue.slice(-1)[0].ri;
+      let cvDiscountedRi = rimValue.slice(-1)[0].disRi;
+      let cv = {item: '每股持续价值CV'};
+      cv['y' + (rimValue.length-1)] = cvRi.toFixed(3);
+      results.push(cv);
+      results.push({item: '每股持续价值的折现', y1: cvDiscountedRi.toFixed(3)});
+      results.push({item: '每股内在价值', y1: (cvDiscountedRi + sum + rimValue[0].bps).toFixed(3)});
+
+      return results;
+    },
     calcRimValue(indicator, forecast, capitalReturn, growthPeriod, growthRate, sustainedGrowRate) {
       assert(typeof(indicator[0]['value']) == "string")
       assert(typeof(forecast[0]['value']) == "number")
       assert(typeof(capitalReturn) == "number")
       assert(typeof(sustainedGrowRate) == "number")
 
-      let lastBPS = parseFloat(indicator[0]['value']);
-      let value = lastBPS;
+      let results = [{year: 2018, bps: parseFloat(indicator[0]['value']), eps: null, ri: null, disRi: null, roe: null}]
 
       // 分析师预测数据推算
-      let eps = 0;
-      let year = 0;
-      for (let i = 0; i <= 2; i++) {
-        eps = forecast[i]['value'];
-        let ri = eps - lastBPS * capitalReturn;
-        year++;
-        let discounted_ri = ri / Math.pow(1 + capitalReturn, year);
-        value += discounted_ri;
-        lastBPS = eps + lastBPS;
-        value += eps;
+      for (let year = 2019; year <= 2021; year++) {
+          let lastResult = results.slice(-1)[0];
+        let eps = forecast[year-2019]['value'];
+        let ri = eps - lastResult.bps * capitalReturn;
+        let result = {year: year,
+            bps: eps + lastResult.bps,
+            eps: eps,
+            ri: ri,
+            disRi: ri / Math.pow(1 + capitalReturn, year - 2019),
+        };
+        results.push(result);
       }
 
       // 盈利成长期推算
-      for (let j = 0; j < growthPeriod; j++) {
-        eps = eps * (1 + growthRate);
-        let ri = eps - lastBPS * capitalReturn;
-        year++;
-        let discounted_ri = ri / Math.pow(1 + capitalReturn, year)
-        value += discounted_ri;
-        lastBPS = eps + lastBPS;
+      for (let year = 2022; year <= 2021 + growthPeriod; year++) {
+        let lastResult = results.slice(-1)[0];
+        let eps = lastResult.eps * (1 + growthRate);
+        let ri = eps - lastResult.bps * capitalReturn;
+        let result = {
+            year: year,
+            bps: eps + lastResult.bps,
+            eps: eps,
+            ri: ri,
+            disRi: ri / Math.pow(1+capitalReturn, year - 2019)
+        };
+        results.push(result)
       }
 
       // 经营持续期的推算
-      let ri = eps * (1 + sustainedGrowRate) / (capitalReturn - sustainedGrowRate);
-      let discounted_ri = ri / Math.pow(1 + capitalReturn, year)
-      value += discounted_ri;
+        let lastResult = results.slice(-1)[0];
+      let ri = lastResult.ri * (1 + sustainedGrowRate) / (capitalReturn - sustainedGrowRate);
+      let result = {
+          year: null,
+          bps: null,
+          eps: null,
+          ri: ri,
+          disRi: ri / Math.pow(1+capitalReturn, lastResult.year - 2019)
+      };
+      results.push(result);
 
-      return value;
+      results[0].disRi = results[0].bps;
+      let value = results.reduce((x, y) => x + y.disRi, 0);
+      results[0].disRi = null;
+
+      return {value: value, procedure: results};
     }
   },
   mounted() {
