@@ -12,6 +12,22 @@ public class Security {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long rowid;
 
+    public void setDisplayname(String displayname) {
+        this.displayname = displayname;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    public void setMatch(String match) {
+        this.match = match;
+    }
+
     private String displayname;
     private String name;
     private String code;

@@ -1,7 +1,11 @@
 <template>
   <div id="box">
     <transition name="mybox">
-      <div class="box" v-show="boxshow"><rim-value></rim-value></div>
+      <div class="box" v-show="boxshow">
+        <VueShowdown   :markdown="markdown"
+                       flavor="github"
+                       :options="{ emoji: true }"/>
+      </div>
     </transition>
     <div class="spreadButton" v-if="showFlag()">
       <el-button @click="togglebox">展开 模型说明</el-button>
@@ -12,17 +16,21 @@
   </div>
 </template>
 <script>
-import rimValue from "../assets/剩余收益估值.md";
+import { VueShowdown } from 'vue-showdown'
+
 export default {
   name: "Spread",
-  components: { rimValue },
+
+  components: { VueShowdown },
   data() {
     return {
-      boxshow: false
+      boxshow: false,
+      md: "## 你好showdown",
+      test: 1
     };
   },
   props: {
-    mes2: {
+    markdown: {
       type: String,
       default: ""
     }
@@ -31,7 +39,6 @@ export default {
     togglebox: function() {
       this.boxshow = !this.boxshow;
     },
-
     showFlag() {
       return !this.boxshow;
     }

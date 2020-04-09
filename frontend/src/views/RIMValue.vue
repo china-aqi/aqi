@@ -64,8 +64,8 @@
         </el-row>
       </div>
       <el-tabs v-model="activeName" @tab-click="handleClick">
-        <el-tab-pane label="估值模型说明" name="second"><spread></spread></el-tab-pane>
-        <el-tab-pane label="估值计算可视化" name="first">
+        <el-tab-pane label="估值模型说明" name="second"><spread :markdown="rimIntroduction"></spread></el-tab-pane>
+        <el-tab-pane label="估值计算可视化" name="first" v-if="lastIndicator != null">
           <RIMVisualization :columns="getRimVisualizationTblCols(T1Value)"
                             :tblData="toVisData(calcRimValue(lastIndicator, forecast, RValue, T1Value, G1Value, G2Value)['procedure'])"></RIMVisualization>
         </el-tab-pane>
@@ -109,7 +109,8 @@ export default {
       G1Value: 0.2,
       G2Value: 0.02,
       T1Value: 5,
-      activeName: 'second'
+      activeName: 'second',
+      rimIntroduction: "# asdfasdf"
     };
   },
   methods: {
@@ -175,12 +176,15 @@ export default {
       return results;
     },
     calcRimValue(indicator, forecast, capitalReturn, growthPeriod, growthRate, sustainedGrowRate) {
-      assert(typeof(indicator[0]['value']) == "string")
-      assert(typeof(forecast[0]['value']) == "number")
-      assert(typeof(capitalReturn) == "number")
-      assert(typeof(sustainedGrowRate) == "number")
+      if (indicator == null || forecast == null) {
+        return null;
+      }
+      assert(typeof(indicator[0]['value']) == "string");
+      assert(typeof(forecast[0]['value']) == "number");
+      assert(typeof(capitalReturn) == "number");
+      assert(typeof(sustainedGrowRate) == "number");
 
-      let results = [{year: 2018, bps: parseFloat(indicator[0]['value']), eps: null, ri: null, disRi: null, roe: null}]
+      let results = [{year: 2018, bps: parseFloat(indicator[0]['value']), eps: null, ri: null, disRi: null, roe: null}];
 
       // 分析师预测数据推算
       for (let year = 2019; year <= 2021; year++) {
@@ -232,17 +236,22 @@ export default {
   },
   mounted() {
     // 获取当期财务指标
-    axios.get("http://192.168.0.7:1303/indicator/search/getByCode", {params: { code: this.$route.query.code }})
+    axios.get("http://106.15.137.244:8080/indicator/search/getByCode", {params: { code: this.$route.query.code }})
             .then(res => (this.lastIndicator = [{des: "2018BPS", value: res.data["_embedded"]["indicator"][0]["bps"].toFixed(2)},
               {des: "2018EPS", value: res.data["_embedded"]["indicator"][0]["eps"]}]))
     // 获取分析师盈利预测
-    axios.get("http://192.168.0.7:1303/forecast/search/getByCode", {params: { code: this.$route.query.code }})
+    axios.get("http://106.15.137.244:8080/forecast/search/getByCode", {params: { code: this.$route.query.code }})
             .then(res => (this.forecast = [{des: "2019EPS", value: res.data["_embedded"]["forecast"][0]["eps2019"]},
               {des: "2020EPS", value: res.data["_embedded"]["forecast"][0]["eps2020"]},
               {des: "2021EPS", value: res.data["_embedded"]["forecast"][0]["eps2021"]}]))
     // 获取公司介绍
-    axios.get("http://192.168.0.7:1303/company/search/getByCode", {params: { code: this.$route.query.code }})
+    axios.get("http://106.15.137.244:8080/company/search/getByCode", {params: { code: this.$route.query.code }})
             .then(res => (this.company = res.data["_embedded"]["company"][0]))
+    // 获取剩余收益模型的介绍
+    const url = `http://106.15.137.244:8080/%E5%89%A9%E4%BD%99%E6%94%B6%E7%9B%8A%E4%BC%B0%E5%80%BC.md`;
+    axios.get(url).then((response) => {
+      this.rimIntroduction = response.data;
+    });
   }
 };
 </script>

@@ -38,7 +38,7 @@ export default {
       },
     querySearch(queryString, cb) {
         if (queryString.length >= 2 && queryString.length <= 6) {
-            axios.get("http://192.168.0.7:1303/security/search/findFirst7ByMatchContaining?match="+this.state1,)
+            axios.get("http://106.15.137.244:8080/security/search/findFirst7ByMatchContaining?match="+this.state1,)
                 .then(x => this.test(x, cb)) //this.handle_securities_4_combobox);
         }
     },

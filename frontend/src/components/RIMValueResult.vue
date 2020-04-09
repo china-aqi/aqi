@@ -1,11 +1,11 @@
 <template>
-  <strong class="rim_result">内在价值：{{ result }}</strong>
+  <strong class="rim_result">内在价值：{{ result.toFixed(2) }}</strong>
 </template>
 
 <script>
 export default {
   name: "RIMValueResult",
-  props: { result: String }
+  props: { result: Number }
 };
 </script>
 

@@ -75,6 +75,7 @@
                   <include>static/</include>
                   <include>index.html</include>
                   <include>favicon.ico</include>
+				  <include>剩余收益估值.md</include>
                 </includes>
               </resource>
             </resources>
