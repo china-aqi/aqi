@@ -1,18 +1,12 @@
 <template>
   <div id="box">
     <transition name="mybox">
-      <div class="box" v-show="boxshow">
+      <div class="box" v-show="flag">
         <VueShowdown   :markdown="markdown"
                        flavor="github"
                        :options="{ emoji: true }"/>
       </div>
     </transition>
-    <div class="spreadButton" v-if="showFlag()">
-      <el-button @click="togglebox">展开 模型说明</el-button>
-    </div>
-    <div class="spreadButton" v-else>
-      <el-button @click="togglebox">收起 模型说明</el-button>
-    </div>
   </div>
 </template>
 <script>
@@ -20,12 +14,11 @@ import { VueShowdown } from 'vue-showdown'
 
 export default {
   name: "Spread",
-
   components: { VueShowdown },
   data() {
     return {
       boxshow: false,
-      md: "## 你好showdown",
+      md: "## 你好",
       test: 1
     };
   },
@@ -33,6 +26,10 @@ export default {
     markdown: {
       type: String,
       default: ""
+    },
+    flag: {
+      type: Boolean,
+      default: false
     }
   },
   methods: {
@@ -56,9 +53,9 @@ export default {
 }
 .mybox-leave-active,
 .mybox-enter-active {
-  transition: all 0.5s ease;
+  transition: all 1s ease;
 }
-.mybox-leave-active,
+.mybox-leave-active,a
 .mybox-enter {
   height: 0px !important;
 }

@@ -4,18 +4,24 @@
       <span><strong>公司介绍</strong></span>
     </div>
     <div class="infoContent" v-if="companyInfo != null">
-      <ul>
-        <li>
-          <strong>市值：</strong>{{ companyInfo.marketcap.toFixed(1) }}亿元
-        </li>
-        <li><strong>行业：</strong>{{ companyInfo.industry }}</li>
-        <li v-if="this.companyInfo.mainbusiness.length > 18">
-          <strong>主营：</strong>{{ stringCut() }} ...
-        </li>
-        <li v-else><strong>主营：</strong>{{ stringCut() }}</li>
-        <li><strong>注册：</strong>{{ this.companyInfo.province }} - {{this.companyInfo.city}}</li>
-        <li><strong>历史：</strong>{{ this.companyInfo.history }}</li>
-      </ul>
+      <!--      <ul>-->
+      <!--        <li>-->
+      <!--          <strong>市值：</strong>{{ companyInfo.marketcap.toFixed(1) }}亿元-->
+      <!--        </li>-->
+      <!--        <li><strong>行业：</strong>{{ companyInfo.industry }}</li>-->
+      <!--        <li v-if="this.companyInfo.mainbusiness.length > 18">-->
+      <!--          <strong>主营：</strong>{{ stringCut() }} ...-->
+      <!--        </li>-->
+      <!--        <li v-else><strong>主营：</strong>{{ stringCut() }}</li>-->
+      <!--        <li><strong>注册：</strong>{{ this.companyInfo.province }} - {{this.companyInfo.city}}</li>-->
+      <!--        <li><strong>历史：</strong>{{ this.companyInfo.history }}</li>-->
+      <!--      </ul>-->
+      <div><strong>市值：</strong>{{ companyInfo.marketcap.toFixed(1) }}亿元</div>
+      <div><strong>行业：</strong>{{ companyInfo.industry }}<br /></div>
+      <div v-if="this.companyInfo.mainbusiness.length > 18"><strong>主营：</strong>{{ stringCut() }} ...</div>
+      <div v-else><strong>主营：</strong>{{ stringCut() }}</div>
+      <div><strong>注册：</strong>{{ this.companyInfo.province }} - {{this.companyInfo.city}}</div>
+      <div><strong>历史：</strong>{{ this.companyInfo.history }}</div>
     </div>
   </el-card>
 </template>

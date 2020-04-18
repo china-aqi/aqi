@@ -64,7 +64,7 @@
         </el-row>
       </div>
       <el-tabs v-model="activeName" @tab-click="handleClick">
-        <el-tab-pane label="估值模型说明" name="second"><spread :markdown="rimIntroduction"></spread></el-tab-pane>
+        <el-tab-pane label="估值模型说明" name="second"><spread :markdown="rimIntroduction" :flag="showflag"></spread></el-tab-pane>
         <el-tab-pane label="估值计算可视化" name="first" v-if="lastIndicator != null">
           <RIMVisualization :columns="getRimVisualizationTblCols(T1Value)"
                             :tblData="toVisData(calcRimValue(lastIndicator, forecast, RValue, T1Value, G1Value, G2Value)['procedure'])"></RIMVisualization>
@@ -110,12 +110,14 @@ export default {
       G2Value: 0.02,
       T1Value: 5,
       activeName: 'second',
-      rimIntroduction: "# asdfasdf"
+      rimIntroduction: "# asdfasdf",
+      showflag: false
     };
   },
   methods: {
     handleClick(tab, event) {
       console.log(tab, event);
+      this.showflag = this.showflag===false ? true : false;
     },
     getValueT1T2FormSon(data) {
       this.T1Value = data;
