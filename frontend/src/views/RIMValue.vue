@@ -131,11 +131,11 @@ export default {
       this.G2Value = data;
     },
     getRimVisualizationTblCols(growingPeriod) {
-      let cols = [{prob: 'item', label: '项目', width:180}, {prob: 'y1', label: '2018年', width:70},
-        {prob: 'y2', label: '2019年', width:70}, {prob: 'y3', label: '2020年', width:70},
-        {prob: 'y4', label: '2021年', width:70}];
+      let cols = [{prob: 'item', label: '项目', width:160}, {prob: 'y1', label: '2018年', width:75},
+        {prob: 'y2', label: '2019年', width:75}, {prob: 'y3', label: '2020年', width:75},
+        {prob: 'y4', label: '2021年', width:75}];
       for (let i = 0; i < growingPeriod; i++) {
-        cols.push({prob: 'y' + (i+5).toString(), label: (2022 + i).toString() + '年', width:70})
+        cols.push({prob: 'y' + (i+5).toString(), label: (2022 + i).toString() + '年', width:75})
       }
       return cols;
     },

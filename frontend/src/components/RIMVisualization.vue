@@ -15,16 +15,6 @@
 <script>
     export default {
         name: "RIMVisualization",
-        // data() {
-        //     return {
-        //         boxshow: true,
-        //         y5Flag: true,
-        //         y6Flag: true,
-        //         y7Flag: true,
-        //         y8Flag: true,
-        //         y9Flag: false
-        //     }
-        // },
         props: {
             columns: {
                 type: Array,
@@ -55,19 +45,4 @@
         overflow: hidden;
         text-align: left;
     }
-    /*.mybox-leave-active,*/
-    /*.mybox-enter-active {*/
-    /*    transition: all 0.5s ease;*/
-    /*}*/
-    /*.mybox-leave-active,*/
-    /*.mybox-enter {*/
-    /*    height: 0px !important;*/
-    /*}*/
-    /*.mybox-leave,*/
-    /*.mybox-enter-active {*/
-    /*    height: 500px;*/
-    /*}*/
-    /*.spreadButton {*/
-    /*    margin-top: 20px;*/
-    /*}*/
 </style>
