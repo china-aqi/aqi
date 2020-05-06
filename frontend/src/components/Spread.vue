@@ -53,7 +53,7 @@ export default {
 }
 .mybox-leave-active,
 .mybox-enter-active {
-  transition: all 1s ease;
+  transition: all 0.5s ease;
 }
 .mybox-leave-active,a
 .mybox-enter {

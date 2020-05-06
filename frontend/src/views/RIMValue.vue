@@ -250,7 +250,8 @@ export default {
     axios.get("http://106.15.137.244:8080/company/search/getByCode", {params: { code: this.$route.query.code }})
             .then(res => (this.company = res.data["_embedded"]["company"][0]))
     // 获取剩余收益模型的介绍
-    const url = `http://106.15.137.244:8080/%E5%89%A9%E4%BD%99%E6%94%B6%E7%9B%8A%E4%BC%B0%E5%80%BC.md`;
+    // const url = `http://106.15.137.244:8080/%E5%89%A9%E4%BD%99%E6%94%B6%E7%9B%8A%E4%BC%B0%E5%80%BC.md`;
+    const url = `http://192.168.0.7:8080/%E5%89%A9%E4%BD%99%E6%94%B6%E7%9B%8A%E4%BC%B0%E5%80%BC.md`;
     axios.get(url).then((response) => {
       this.rimIntroduction = response.data;
     });

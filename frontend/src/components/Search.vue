@@ -62,19 +62,7 @@ export default {
     jump() {
       this.$router.push("/RIMValue/" + this.state1.replace(/[^0-9]/gi, ""));
     }
-  },
-  mounted() {
-    // axios
-    //   .get("http://192.168.0.7:1303/security")
-    //   .then(this.handle_securities_4_combobox);
-  },
-    watch: {
-        // 如果 `question` 发生改变，这个函数就会运行
-        state1() {
-            // axios.get("http://192.168.0.7:1303/security/search/findFirst7ByMatchContaining?match=中国")
-            //     .then(x => this.securities = x.data);
-        }
-    },
+  }
 };
 </script>
 
